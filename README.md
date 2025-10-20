@@ -3,7 +3,7 @@ A chatapp for students built on python and using GCP as a remote database
 
 # Requirements:
 install websockets with pip
-# On Linux:
+## On Linux:
 `sudo apt install python3-websockets`
-# On Windows:
+## On Windows:
 `pip install websockets`

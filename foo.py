@@ -5,7 +5,10 @@ cred = credentials.Certificate("chatbase-b273c-firebase-adminsdk-fbsvc-4287cc06f
 initialize_app(cred)
 db = firestore.client()
 
-##Write to db
+##Read from db
 user_ref = db.collection("users").document("user1")
 user = user_ref.get()
 print(user.to_dict())
+
+##Write to db
+c = Client(

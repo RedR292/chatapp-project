@@ -2,14 +2,15 @@ import asyncio
 import websockets
 from client import *
 clients = set()
+sockets = dict()
+##TODO: Save new clients to db
+##TODO: Pass client object to html. Javascript? Xml?
 
 async def handle(ws):
-    newClient = Client(ws)
-    clients.add(newClient)
-    # for client in clients:
-    #     print(client.username)
+    newClient = Client()
+    clients.add(Client())
+    sockets[ws] = newClient.ID
     try:
-        # print(ws)
         async for msg in ws:
             await asyncio.gather(*[
                 c.send(msg) for c in [client.ws for client in clients] if c != ws

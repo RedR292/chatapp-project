@@ -1,6 +1,13 @@
 from firebase_admin import credentials, firestore, initialize_app
 from client import *
 
+##TODO: Break apis up into the following scheme
+#/
+#-routes
+#--client_api.py
+#--admin_api.py
+#--etc
+
 ##init connection
 cred = credentials.Certificate("chatbase-b273c-firebase-adminsdk-fbsvc-4287cc06fa.json")
 initialize_app(cred)
@@ -95,9 +102,16 @@ def checkUser(username):
     ##ENDFOR
 
 if __name__ == "__main__":
-    # _addTestUser()
-    # _addTestUser2()
+    print(f"Client count = {numberOfClients}")
+    _addTestUser()
+    print(f"Client count = {numberOfClients}")
+    deleteUser("John Smith")
+    _addTestUser2()
+    print(f"Client count = {numberOfClients}")
+    _addTestUser()
+    print(f"Client count = {numberOfClients}")
     deleteUser("Jane Doe")
     deleteUser("John Smith")
-    print(numberOfClients)
+    print(f"Client count = {numberOfClients}")
+    # print(numberOfClients)
 ##ENDIF

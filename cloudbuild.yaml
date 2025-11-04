@@ -21,6 +21,6 @@ steps:
    - 'northamerica-northeast2'
    - '--port'
    - '80'
- images:
+images:
  - 'gcr.io/chatbase-b273c/frontend'
  # - 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA'

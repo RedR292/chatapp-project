@@ -3,4 +3,4 @@ WORKDIR /usr/src/app
 COPY requirements.txt  ./
 RUN pip install -r requirements.txt
 COPY . .
-CMD [ "uvicorn", "main:app", "--host", "0.0.0.0" ]
+CMD [ "uvicorn", "Server:run", "--host", "0.0.0.0" ]

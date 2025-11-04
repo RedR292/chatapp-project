@@ -7,7 +7,6 @@ steps:
    entrypoint: "bash"
    args: ["-c", "echo $$firebase_key > /usr/src/app/firebase_key.json"]
    secretEnv: ["firebase_key"]
-
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
    args: ['push', 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA']
@@ -29,6 +28,10 @@ steps:
    - '--ingress'
    - 'internal'
    timeout: 300s #5 minutes
+availableSecrets:
+  secretManager:
+  - env: 'firebase_key'
+    versionName: 'projects/chatbase-b273c/secrets/firebase_key/versions/latest'
 options:
   logging: CLOUD_LOGGING_ONLY
 images:

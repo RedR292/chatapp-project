@@ -9,7 +9,7 @@ import hashlib
 #--etc
 
 ##init connection
-cred = credentials.Certificate("../chatbase-b273c-firebase-adminsdk-fbsvc-4287cc06fa.json")
+cred = credentials.Certificate("../firebase_key.json")
 initialize_app(cred)
 db = firestore.client()
 clientDict = db.collection("misc").document("client").get().to_dict()

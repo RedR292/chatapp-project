@@ -1,3 +1,6 @@
+import sys
+sys.path.append("lib")
+# from api import *
 import asyncio
 import json
 import logging
@@ -9,6 +12,8 @@ import websockets
 import redis
 from redis import asyncio as aioredis
 from redis.client import Redis, PubSub
+
+import api_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

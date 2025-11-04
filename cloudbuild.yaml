@@ -24,7 +24,7 @@ steps:
    - '--port'
    - '8000'
    - '--update-env-vars'
-   - 'REDIS_HOST=redis://10.87.130.75'
+   - 'REDIS_HOST=redis://0.0.0.0'
    - '--ingress'
    - 'internal'
    timeout: 300s #5 minutes

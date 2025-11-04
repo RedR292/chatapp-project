@@ -1,6 +1,5 @@
 import sys
 sys.path.append("lib")
-# from api import *
 import asyncio
 import json
 import logging
@@ -123,3 +122,10 @@ class ChatMessage:
     time: str
     message: str
 ##END ChatMessage
+
+@app.websocket("/ws/{channel_id}/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: int):
+    await manager.connect(websocket)
+
+    chat_server = ChatServer(websocket, channel_id, client_id)
+    await chat_server.run()

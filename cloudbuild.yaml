@@ -1,0 +1,24 @@
+steps:
+ # Build the container image
+ - name: 'gcr.io/cloud-builders/docker'
+   args: ['build', '-t', 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA', '.']
+ # Push the container image to Container Registry
+ - name: 'gcr.io/cloud-builders/docker'
+   args: ['push', 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA']
+ # Deploy container image to Cloud Run
+ - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+   entrypoint: gcloud
+   args:
+   - 'run'
+   - 'deploy'
+   - 'backend'
+   - '--image'
+   - 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA'
+   - '--region'
+   - 'asia-northeast3'
+   - '--port'
+   - '8000'
+   - '--update-env-vars'
+   - 'REDIS_HOST=redis://10.87.130.75'
+ images:
+ - 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA'

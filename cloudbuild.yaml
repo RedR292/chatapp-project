@@ -21,6 +21,8 @@ steps:
    - 'northamerica-northeast2'
    - '--port'
    - '80'
+options:
+  logging: CLOUD_LOGGING_ONLY
 images:
  - 'gcr.io/chatbase-b273c/frontend'
  # - 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA'

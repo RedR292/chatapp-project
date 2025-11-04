@@ -20,6 +20,8 @@ steps:
    - '80'
    - '--update-env-vars'
    - 'REDIS_HOST=redis://10.87.130.75'
+   - '--ingress'
+   - 'internal'
 options:
   logging: CLOUD_LOGGING_ONLY
 images:

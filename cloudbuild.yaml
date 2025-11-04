@@ -2,6 +2,12 @@ steps:
  # Build the container image
  - name: 'gcr.io/cloud-builders/docker'
    args: ['build', '-t', 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA', '.']
+# Add the secret key for firebase admin
+ - name: 'gcr.io/cloud-builders/gcloud'
+   entrypoint: "bash"
+   args: ["-c", "mkdir -p /usr/src/app && echo $$API_KEY > /usr/src/app/api_key.json"]
+   secretEnv: ["API_KEY"]
+
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
    args: ['push', 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA']

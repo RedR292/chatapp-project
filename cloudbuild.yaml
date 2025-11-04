@@ -17,7 +17,7 @@ steps:
    - '--region'
    - 'northamerica-northeast2'
    - '--port'
-   - '8000'
+   - '81'
    - '--update-env-vars'
    - 'REDIS_HOST=redis://10.87.130.75'
    - '--ingress'

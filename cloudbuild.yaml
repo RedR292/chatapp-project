@@ -5,7 +5,7 @@ steps:
 # Add the secret key for firebase admin
  - name: 'gcr.io/cloud-builders/gcloud'
    entrypoint: "bash"
-   args: ["-c", "echo $$firebase_key > /usr/src/app/firebase_key.json"]
+   args: ["-c", "touch /usr/src/app/firebase_key.json", " && ", "echo $$firebase_key > /usr/src/app/firebase_key.json"]
    secretEnv: ["firebase_key"]
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'

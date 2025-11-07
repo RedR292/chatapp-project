@@ -25,7 +25,7 @@ class RedisService:
     async def get_conn(self):
         return await aioredis.from_url(self.redis_host, encoding="utf-8", decode_responses=True)
 
-##END RedisService
+##END RedisServicedjiofds
 
 ##Creates a new chat server instance.
 class ChatServer(RedisService):

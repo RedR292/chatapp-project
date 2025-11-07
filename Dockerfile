@@ -9,8 +9,8 @@ FROM node:20 AS build
 WORKDIR /app
 
 # Copy package files and install dependencies
-COPY frontend/package.json ./
-COPY frontend/package-patch.json ./
+COPY package.json ./
+COPY package-patch.json ./
 RUN npm ci
 
 # Copy all source files

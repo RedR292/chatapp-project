@@ -1,4 +1,4 @@
 .key
-*.json
+firebase_key.json
 __pycache__
 .venv

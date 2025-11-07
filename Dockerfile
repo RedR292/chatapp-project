@@ -9,7 +9,8 @@ FROM node:20 AS build
 WORKDIR /app
 
 # Copy package files and install dependencies
-COPY package*.json ./
+COPY package.json ./
+COPY package-patch.json ./
 RUN npm ci
 
 # Copy all source files
@@ -30,6 +31,4 @@ COPY --from=build /app/build /usr/share/nginx/html
 # Expose port 8080 for Cloud Run
 EXPOSE 8000
 
-# Nginx defaults to port 80, but Cloud Run expects 8080
-# So we tell nginx to listen on 8080 instead
 CMD ["nginx", "-g", "daemon off;"]

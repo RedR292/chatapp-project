@@ -25,6 +25,6 @@ COPY --from=build /app/ /usr/share/nginx/html
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 8000 for Cloud Run
-EXPOSE 8000
+#EXPOSE 8000
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy all source files
 COPY . ./
@@ -25,6 +25,6 @@ COPY --from=build /app/ /usr/share/nginx/html
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 8000 for Cloud Run
-#EXPOSE 8080
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

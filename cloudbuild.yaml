@@ -1,10 +1,10 @@
 steps:
  # Build the container image
  - name: 'gcr.io/cloud-builders/docker'
-   args: ['build', '-t', 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA', '.']
+   args: ['build', '-t', 'northamerica-northeast2-docker.pkg.dev/chatbase-b273c/frontend:$COMMIT_SHA', '.']
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
-   args: ['push', 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA']
+   args: ['push', 'northamerica-northeast2-docker.pkg.dev/chatbase-b273c/frontend:$COMMIT_SHA']
  # Deploy container image to Cloud Run
  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
    entrypoint: gcloud
@@ -13,12 +13,12 @@ steps:
    - 'deploy'
    - 'frontend'
    - '--image'
-   - 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA'
+   - 'northamerica-northeast2-docker.pkg.dev/chatbase-b273c/frontend:$COMMIT_SHA'
    - '--region'
    - 'northamerica-northeast2'
-   # - '--port'
-   # - '8080'
+   - '--port'
+   - '8080'
 options:
   logging: CLOUD_LOGGING_ONLY
 images:
- - 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA'
+ - 'northamerica-northeast2-docker.pkg.dev/chatbase-b273c/frontend:$COMMIT_SHA'

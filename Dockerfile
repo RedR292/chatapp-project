@@ -3,7 +3,7 @@
 #COPY client.html /usr/share/nginx/html
 
 # ---- Build stage ----
-FROM node:20 AS build
+FROM node:20-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -13,7 +13,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Copy all source files
-COPY . .
+COPY . ./
 
 # Build the React app for production
 RUN npm run build

@@ -14,7 +14,7 @@ COPY . ./
 
 # Build the React app for production
 RUN npm run build
-
+RUN npm run dev
 # ---- Run stage ----
 FROM nginx:stable-alpine
 

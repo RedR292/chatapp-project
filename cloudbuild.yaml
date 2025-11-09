@@ -17,7 +17,7 @@ steps:
    - '--region'
    - 'northamerica-northeast2'
    - '--port'
-   - '8080'
+   - '8000'
 options:
   logging: CLOUD_LOGGING_ONLY
 images:

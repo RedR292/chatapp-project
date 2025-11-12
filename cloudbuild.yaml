@@ -16,8 +16,8 @@ steps:
    - 'gcr.io/chatbase-b273c/frontend:$COMMIT_SHA'
    - '--region'
    - 'northamerica-northeast2'
-   # - '--port'
-   # - '8080'
+   - '--port'
+   - '80'
 options:
   logging: CLOUD_LOGGING_ONLY
 images:

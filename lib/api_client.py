@@ -3,7 +3,7 @@ from client import *
 import hashlib
 ##TODO: Break apis up into the following scheme
 #/
-#-routes
+#-lib
 #--client_api.py
 #--admin_api.py
 #--etc

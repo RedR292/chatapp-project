@@ -18,13 +18,16 @@ RUN npm run build
 # ---- Run stage ----
 FROM nginx:alpine
 
+# Add script snippet to /app/dist/index.html
+RUN cat /app/script.txt | sed -i '13i' /app/dist/index.html
+
 # Copy built static files from previous stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy custom nginx configuration (optional)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 8080 for Cloud Run
+# Expose port 80 for Cloud Run
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,9 +1,10 @@
 class RedisService:
     def __init__(self):
-        self.redis_host = f"{os.environ.get('REDIS_HOST', 'redis://localhost')}"
+        self.redis_host = f"{os.environ.get('REDIS_HOST', 'redis://0.0.0.0')}"
+        self.redis_port = int(os.environ.get('REDISPORT', 6379))
 
     async def get_conn(self):
-        return await aioredis.from_url(self.redis_host, encoding="utf-8", decode_responses=True)
+        return await aioredis.from_url(self.redis_host, encoding="utf-8", decode_responses=True, port=self.redis_port)
 
 
 class ChatServer(RedisService):

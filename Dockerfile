@@ -22,7 +22,32 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Add script snippet to /app/dist/index.html
-RUN cat './script.txt' | sed -i '13i' '/usr/share/nginx/html/index.html'
+RUN echo "\
+    <script> \
+    var ws = null; \
+    function connect(event) { \
+        var client_id = Date.now() \
+        document.querySelector('#client-id').textContent = client_id; \
+        document.querySelector('#room-id').textContent = channelId.value; \
+        if (ws) ws.close() \
+        ws = new WebSocket(`wss://xxx-du.a.run.app/ws/${channelId.value}/${client_id}`); \
+        ws.onmessage = function(event) { \
+            var messages = document.getElementById('messages') \
+            var message = document.createElement('li') \
+            var content = document.createTextNode(event.data) \
+            message.appendChild(content) \
+            messages.appendChild(message) \
+        }; \
+        event.preventDefault() \
+    } \
+    function sendMessage(event) { \
+        var input = document.getElementById('messageText') \
+        ws.send(input.value) \
+        input.value = '' \
+        event.preventDefault() \
+        document.getElementById('messageText').focus() \
+    } \
+</script>' | sed -i '13i' '/usr/share/nginx/html/index.html'
 
 # Copy custom nginx configuration (optional)
 COPY nginx.conf /etc/nginx/conf.d/default.conf

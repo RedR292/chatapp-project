@@ -18,11 +18,12 @@ RUN npm run build
 # ---- Run stage ----
 FROM nginx:alpine
 
-# Add script snippet to /app/dist/index.html
-RUN cat /app/script.txt | sed -i '13i' /app/dist/index.html
-
 # Copy built static files from previous stage
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/index.txt /usr/share/nginx/html
+
+# Add script snippet to /app/dist/index.html
+RUN cat '/usr/share/nginx/html/script.txt' | sed -i '13i' '/usr/share/nginx/html/index.html'
 
 # Copy custom nginx configuration (optional)
 COPY nginx.conf /etc/nginx/conf.d/default.conf

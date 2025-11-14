@@ -30,7 +30,7 @@ RUN echo " \
         document.querySelector('#client-id').textContent = client_id; \
         document.querySelector('#room-id').textContent = channelId.value; \
         if (ws) ws.close() \
-        ws = new WebSocket('wss://xxx-du.a.run.app/ws/${channelId.value}/${client_id}'); \
+        ws = new WebSocket('wss://frontend-1027679917959.northamerica-northeast2.run.app/ws/${channelId.value}/${client_id}'); \
         ws.onmessage = function(event) { \
             var messages = document.getElementById('messages') \
             var message = document.createElement('li') \

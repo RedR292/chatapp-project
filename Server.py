@@ -54,6 +54,7 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_json(message, mode="text")
 
+connection = ConnectionManager()
 
 @dataclass
 class ChatMessage:
@@ -69,6 +70,3 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: i
 
     chat_server = ChatServer(websocket, channel_id, client_id)
     await chat_server.run()
-
-if __name__ == "__main__":
-    pass

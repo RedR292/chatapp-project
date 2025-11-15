@@ -18,6 +18,23 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+@app.post("/")
+def handle_pubsub():
+    envelope = request.get_json()
+
+    if not envelope or "message" not in envelope:
+        return ("Invalid Pub/Sub message", 400)
+
+    encoded_data = envelope["message"].get("data", "")
+    if encoded_data:
+        data = base64.b64decode(encoded_data).decode("utf-8")
+        payload = json.loads(data)  # Your API request payload
+        print("Received payload:", payload)
+
+        # --- Your backend logic here ---
+        # e.g. write to database, run workflow, etc.
+
+    return ("OK", 200)
 
 class ConnectionManager:
     def __init__(self):
@@ -54,3 +71,4 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: i
     await chat_server.run()
 
 if __name__ == "__main__":
+    pass

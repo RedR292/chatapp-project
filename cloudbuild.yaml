@@ -24,7 +24,12 @@ steps:
    - '--port'
    - '8000'
    - '--update-env-vars'
-   - 'REDIS_HOST=redis://0.0.0.0'
+   - 'REDIS_HOST=redis://10.12.196.163'
+   - 'REDIS_PORT=6379'
+   - '--vpc-connector'
+   - 'back-to-database'
+   - '--vpc-egress'
+   - 'all-traffic'
    - '--ingress'
    - 'internal'
    timeout: 300s #5 minutes

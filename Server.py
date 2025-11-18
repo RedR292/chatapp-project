@@ -11,7 +11,8 @@ from typing import List
 import redis
 from redis import asyncio as aioredis
 from redis.client import Redis, PubSub
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, Request
+import base64
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class ChatMessage:
     message: str
 
 
-@app.websocket("/ws/test")
+@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: int):
     await manager.connect(websocket)
 

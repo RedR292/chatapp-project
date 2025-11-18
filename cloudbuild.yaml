@@ -1,0 +1,9 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/chatbase-b273c/chatbase', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/chatbase-b273c/chatbase']
+
+images:
+  - 'gcr.io/chatbase-b273c/chatbase'

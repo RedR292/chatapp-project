@@ -42,4 +42,5 @@ app = web.Application()
 app.router.add_post("/signup", signup)
 app.router.add_post("/login", login)
 
-web.run_app(app, host="localhost", port=8080)
+import os
+web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))

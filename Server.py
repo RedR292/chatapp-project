@@ -1,18 +1,21 @@
 import sys
 sys.path.append("lib")
+
 import asyncio
 import json
 import logging
 import os
+
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import List
 
 import redis
 from redis import asyncio as aioredis
-from redis.client import Redis, PubSub
 from fastapi import FastAPI, WebSocket, Request
 import base64
+
+from ChatServer import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -56,14 +59,6 @@ class ConnectionManager:
             await connection.send_json(message, mode="text")
 
 manager = ConnectionManager()
-
-@dataclass
-class ChatMessage:
-    channel_id: str
-    client_id: int
-    time: str
-    message: str
-
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: int):

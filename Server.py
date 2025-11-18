@@ -64,7 +64,7 @@ class ChatMessage:
     message: str
 
 
-@app.websocket("/ws/{channel_id}/{client_id}")
+@app.websocket("/ws/test")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: int):
     await manager.connect(websocket)
 

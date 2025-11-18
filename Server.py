@@ -54,7 +54,7 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_json(message, mode="text")
 
-connection = ConnectionManager()
+manager = ConnectionManager()
 
 @dataclass
 class ChatMessage:

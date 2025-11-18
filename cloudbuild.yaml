@@ -1,5 +1,5 @@
 steps:
- # Build the container image
+ # Build the container image 
  - name: 'gcr.io/cloud-builders/docker'
    args: ['build', '-t', 'gcr.io/chatbase-b273c/backend:$COMMIT_SHA', '.']
 # Add the secret key for firebase admin

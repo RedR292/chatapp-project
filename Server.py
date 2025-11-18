@@ -33,10 +33,8 @@ def handle_pubsub():
     if encoded_data:
         data = base64.b64decode(encoded_data).decode("utf-8")
         payload = json.loads(data)  # Your API request payload
-        print("Received payload:", payload)
-
-        # --- Your backend logic here ---
-        # e.g. write to database, run workflow, etc.
+    print("Received payload:", payload)
+    logger.info(f"Payload received: {payload}")
 
     return ("OK", 200)
 
@@ -60,7 +58,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-@app.websocket("/ws")
+@app.websocket("wss://backend-1027679917959.northamerica-northeast2.run.app/ws?channel_id=test&client_id=123")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: int):
     await manager.connect(websocket)
 

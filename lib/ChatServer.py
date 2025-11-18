@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class RedisService:
     def __init__(self):
-        self.redis_host = f"{os.environ.get('REDIS_HOST', 'localhost')}"
+        self.redis_host = f"{os.environ.get('REDIS_HOST', '10.12.196.163')}"
         self.redis_port = int(os.environ.get('REDIS_PORT', 6379))
         self.redis_url = f"redis://{self.redis_host}:{self.redis_port}"
 

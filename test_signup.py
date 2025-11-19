@@ -1,15 +1,23 @@
-import http.client
-import json
+import requests
+import sys
 
-conn = http.client.HTTPConnection("localhost", 8080)
-payload = json.dumps({
+# ------------------------------
+# Get the base URL
+# ------------------------------
+if len(sys.argv) > 1:
+    BASE_URL = sys.argv[1].rstrip("/")  # Use provided URL
+else:
+    BASE_URL = "http://localhost:8080"   # Default to localhost
+
+# ------------------------------
+# Test Signup
+# ------------------------------
+signup_url = f"{BASE_URL}/signup"
+data = {
     "email": "test@example.com",
-    "password": "123456",
+    "password": "123",
     "name": "Test User"
-})
-headers = {"Content-Type": "application/json"}
+}
 
-conn.request("POST", "/signup", payload, headers)
-res = conn.getresponse()
-print(res.status, res.reason)
-print(res.read().decode())
+response = requests.post(signup_url, json=data)
+print("Signup response:", response.json())

@@ -1,0 +1,5 @@
+serviceAccountKey.json
+.git
+.gitignore
+__pycache__
+*.log

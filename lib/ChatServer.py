@@ -1,5 +1,5 @@
-from redis.client import Redis, PubSub
 import redis
+from redis.client import Redis, PubSub
 from redis import asyncio as aioredis
 import os
 import asyncio

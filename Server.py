@@ -6,10 +6,7 @@ import json
 import logging
 
 from typing import List
-
-import redis
-from redis import asyncio as aioredis
-from fastapi import FastAPI, WebSocket, Request
+from fastapi import FastAPI, WebSocket
 import base64
 
 from ChatServer import *
@@ -55,7 +52,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-@app.websocket("wss://backend-1027679917959.northamerica-northeast2.run.app/ws?channel_id=test&client_id=123")
+@app.websocket("/ws/{channel_id}/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, channel_id: str, client_id: int):
     await manager.connect(websocket)
 

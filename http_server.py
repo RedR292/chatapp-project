@@ -1,6 +1,7 @@
 from aiohttp import web
 import firebase_admin
 from firebase_admin import credentials, firestore
+import os
 
 # initialize Firestore
 cred = credentials.Certificate("serviceAccountKey.json")
@@ -30,7 +31,7 @@ async def login(request):
     email = data.get("email")
     password = data.get("password")
 
-    users = db.collection("users").where("email", "==", email).stream()
+    users = db.collection("users").whpassere("email", "==", email).stream()
     for u in users:
         user = u.to_dict()
         if user["password"] == password:
@@ -42,5 +43,4 @@ app = web.Application()
 app.router.add_post("/signup", signup)
 app.router.add_post("/login", login)
 
-import os
 web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))

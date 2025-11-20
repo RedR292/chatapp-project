@@ -1,4 +1,5 @@
 from aiohttp import web
+import aiohttp_cors
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
@@ -66,14 +67,8 @@ async def root(request):
 
 
 # ------------------------------
-# APP SETUP
-# ------------------------------
-
-# ------------------------------
 # APP SETUP (with CORS)
 # ------------------------------
-
-import aiohttp_cors
 
 app = web.Application()
 

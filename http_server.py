@@ -1,4 +1,5 @@
 from aiohttp import web
+import aiohttp_cors
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
@@ -66,13 +67,29 @@ async def root(request):
 
 
 # ------------------------------
-# APP SETUP
+# APP SETUP (with CORS)
 # ------------------------------
 
 app = web.Application()
+
+# Add routes
 app.router.add_post("/signup", signup)
 app.router.add_post("/login", login)
-app.router.add_get("/", root)  # <-- Added root route
+app.router.add_get("/", root)
+
+# Setup CORS
+cors = aiohttp_cors.setup(app, defaults={
+    "http://localhost:3000": aiohttp_cors.ResourceOptions(
+        allow_credentials=True,
+        expose_headers="*",
+        allow_headers="*",
+        allow_methods=["GET", "POST", "OPTIONS"]
+    )
+})
+
+# Apply CORS to each route
+for route in list(app.router.routes()):
+    cors.add(route)
 
 if __name__ == "__main__":
     web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))

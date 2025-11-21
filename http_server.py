@@ -2,8 +2,6 @@ from aiohttp import web
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
-<<<<<<< HEAD
-=======
 
 # ------------------------------
 # FIREBASE INITIALIZATION
@@ -16,7 +14,6 @@ if os.path.exists("serviceAccountKey.json"):
 else:
     # Cloud Run / GCP: uses built-in credentials automatically
     firebase_admin.initialize_app()
->>>>>>> 55926c8833fad0283c02634832d25fadae176159
 
 db = firestore.client()
 
@@ -48,14 +45,10 @@ async def login(request):
     email = data.get("email")
     password = data.get("password")
 
-<<<<<<< HEAD
-    users = db.collection("users").whpassere("email", "==", email).stream()
-=======
     if not all([email, password]):
         return web.json_response({"error": "Missing fields"}, status=400)
 
     users = db.collection("users").where("email", "==", email).stream()
->>>>>>> 55926c8833fad0283c02634832d25fadae176159
     for u in users:
         user = u.to_dict()
         if user.get("password") == password:
@@ -81,9 +74,5 @@ app.router.add_post("/signup", signup)
 app.router.add_post("/login", login)
 app.router.add_get("/", root)  # <-- Added root route
 
-<<<<<<< HEAD
-web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
-=======
 if __name__ == "__main__":
     web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
->>>>>>> 55926c8833fad0283c02634832d25fadae176159

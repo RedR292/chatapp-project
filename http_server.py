@@ -18,23 +18,17 @@ from google.oauth2 import service_account
 
 # HASHING HELPERS
 def _hash(pw: str):
-    salt = secrets.token_urlsafe(32)  # generates 32B salt
+    salt = secrets.token_urlsafe(32)
     pw_salted = pw + salt
-    pw_hashed = hashlib.sha256(pw_salted.encode()).hexdigest()  # store as string
+    pw_hashed = hashlib.sha256(pw_salted.encode()).hexdigest()
     return pw_hashed, salt
 
 def _get_hash(pw: str, salt: str):
     if salt is None:
         raise ValueError("Salt is missing for this user")
     pw_salted = pw + salt
-    pw_hashed = hashlib.sha256(pw_salted.encode()).hexdigest()  # return string
+    pw_hashed = hashlib.sha256(pw_salted.encode()).hexdigest()
     return pw_hashed
-
-# GENERATE A SIGNED URL FOR TO VIEW A FILE (send to the frontend)
-def generate_signed_url(filename, expiration_minutes=15):
-    blob = bucket.blob(f"messages/{filename}")
-    url = blob.generate_signed_url(expiration=timedelta(minutes=expiration_minutes))
-    return url
 
 # ------------------------------
 # FIRESTORE DATABASE INITIALIZATION
@@ -48,10 +42,10 @@ else:
 
 db = firestore.client()
 
-
 # ------------------------------
 # FIREBASE STORAGE INITIALIZATION
 # ------------------------------
+
 if os.path.exists("serviceAccountKey.json"):
     storage_credentials = service_account.Credentials.from_service_account_file(
         "serviceAccountKey.json"
@@ -61,7 +55,6 @@ else:
     storage_client = storage.Client()
 
 bucket = storage_client.bucket("chatbase-b273c.firebasestorage.app")
-
 
 # ------------------------------
 # AUTH ROUTES
@@ -82,14 +75,13 @@ async def signup(request):
     doc.set({
         "email": email,
         "password": password_hash,
-        "hash_salt": salt,  # fixed key name
+        "hash_salt": salt,
         "name": name,
         "friends": [],
         "incomingRequests": []
     })
 
     return web.json_response({"message": "User created", "id": doc.id})
-
 
 async def login(request):
     data = await request.json()
@@ -102,10 +94,9 @@ async def login(request):
     users = db.collection("users").where("email", "==", email).stream()
     for u in users:
         user = u.to_dict()
-        salt = user.get("hash_salt")  # fixed key name
+        salt = user.get("hash_salt")
         if salt is None:
-            continue  # skip user if salt missing
-
+            continue
         password_hashed = _get_hash(password, salt)
         if user.get("password") == password_hashed:
             return web.json_response({"message": "Login successful"})
@@ -130,7 +121,6 @@ async def get_users(request):
 
     return web.json_response(result)
 
-
 # ------------------------------
 # FRIEND SYSTEM ROUTES
 # ------------------------------
@@ -154,11 +144,9 @@ async def send_friend_request(request):
 
     to_data = to_ref.to_dict()
 
-    # Already friends
     if fromUser in to_data.get("friends", []):
         return web.json_response({"error": "Already friends"}, status=400)
 
-    # Already requested
     if fromUser in to_data.get("incomingRequests", []):
         return web.json_response({"error": "Request already sent"}, status=400)
 
@@ -167,7 +155,6 @@ async def send_friend_request(request):
     })
 
     return web.json_response({"message": "Friend request sent"})
-
 
 async def accept_friend_request(request):
     data = await request.json()
@@ -185,11 +172,9 @@ async def accept_friend_request(request):
 
     user_data = user_doc.to_dict()
 
-    # Must be in incoming requests
     if fromUser not in user_data.get("incomingRequests", []):
         return web.json_response({"error": "No friend request found"}, status=400)
 
-    # Add each other as friends
     db.collection("users").document(userId).update({
         "incomingRequests": firestore.ArrayRemove([fromUser]),
         "friends": firestore.ArrayUnion([fromUser])
@@ -201,7 +186,6 @@ async def accept_friend_request(request):
 
     return web.json_response({"message": "Friend request accepted"})
 
-
 async def get_friends(request):
     userId = request.match_info["userId"]
     doc = db.collection("users").document(userId).get()
@@ -212,7 +196,6 @@ async def get_friends(request):
     data = doc.to_dict()
     return web.json_response({"friends": data.get("friends", [])})
 
-
 async def get_incoming_requests(request):
     userId = request.match_info["userId"]
     doc = db.collection("users").document(userId).get()
@@ -222,7 +205,6 @@ async def get_incoming_requests(request):
 
     data = doc.to_dict()
     return web.json_response({"incomingRequests": data.get("incomingRequests", [])})
-
 
 # ------------------------------
 # ROOM ROUTES
@@ -244,7 +226,6 @@ async def create_room(request):
 
     return web.json_response({"message": "Room created", "roomId": doc.id})
 
-
 async def get_rooms(request):
     rooms_ref = db.collection("rooms").stream()
     result = []
@@ -257,7 +238,6 @@ async def get_rooms(request):
         })
 
     return web.json_response(result)
-
 
 async def get_room(request):
     roomId = request.match_info["roomId"]
@@ -273,7 +253,6 @@ async def get_room(request):
         "createdBy": d.get("createdBy")
     })
 
-
 async def update_room(request):
     roomId = request.match_info["roomId"]
     data = await request.json()
@@ -288,7 +267,6 @@ async def update_room(request):
     doc_ref.update({"roomName": roomName})
     return web.json_response({"message": "Room updated"})
 
-
 async def delete_room(request):
     roomId = request.match_info["roomId"]
     doc = db.collection("rooms").document(roomId).get()
@@ -298,7 +276,6 @@ async def delete_room(request):
 
     db.collection("rooms").document(roomId).delete()
     return web.json_response({"message": "Room deleted"})
-
 
 # ------------------------------
 # CONVERSATION ROUTES
@@ -320,7 +297,6 @@ async def create_conversation(request):
 
     return web.json_response({"message": "Conversation created", "conversationId": doc.id})
 
-
 async def get_conversation(request):
     conversationId = request.match_info["conversationId"]
     doc = db.collection("conversations").document(conversationId).get()
@@ -334,9 +310,8 @@ async def get_conversation(request):
         "participants": [d.get("userA"), d.get("userB")]
     })
 
-
 # ------------------------------
-# MESSAGE ROUTES
+# MESSAGE ROUTES (USING PUBLIC URLS)
 # ------------------------------
 
 async def send_message(request):
@@ -360,9 +335,8 @@ async def send_message(request):
     if conversationId and not db.collection("conversations").document(conversationId).get().exists:
         return web.json_response({"error": "Conversation not found"}, status=404)
 
-    document_path = None
+    document_url = None
 
-    # ---------- UPLOAD DOCUMENT IF PROVIDED ----------
     if message_document:
         filename = message_document.get("filename")
         data_b64 = message_document.get("data")
@@ -371,7 +345,6 @@ async def send_message(request):
             return web.json_response({"error": "Document is not a pdf"}, status=400)
 
         file_bytes = base64.b64decode(data_b64)
-
         blob_name = f"messages/{uuid.uuid4()}-{filename}"
         blob = bucket.blob(blob_name)
 
@@ -380,16 +353,15 @@ async def send_message(request):
             content_type="application/pdf"
         )
 
-        document_path = blob_name  # store path, not URL
+        document_url = blob.public_url
 
-    # ---------- SAVE MESSAGE METADATA ----------
     doc = db.collection("messages").document()
     doc.set({
         "senderId": senderId,
         "roomId": roomId,
         "conversationId": conversationId,
         "message": message_text,
-        "document": document_path,  # store path
+        "document": document_url,
         "timestamp": int(time.time())
     })
 
@@ -402,25 +374,19 @@ async def get_room_messages(request):
         return web.json_response({"error": "Room not found"}, status=404)
 
     msgs = db.collection("messages").where("roomId", "==", roomId).stream()
-
     result = []
+
     for m in msgs:
         d = m.to_dict()
-        doc_url = None
-        if d.get("document"):
-            blob = bucket.blob(d["document"])
-            doc_url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
-
         result.append({
             "messageId": m.id,
             "senderId": d.get("senderId"),
             "message": d.get("message"),
-            "document": doc_url,
+            "document": d.get("document"),  # public URL
             "timestamp": d.get("timestamp")
         })
 
     return web.json_response(result)
-
 
 async def get_conversation_messages(request):
     conversationId = request.match_info["conversationId"]
@@ -429,20 +395,15 @@ async def get_conversation_messages(request):
         return web.json_response({"error": "Conversation not found"}, status=404)
 
     msgs = db.collection("messages").where("conversationId", "==", conversationId).stream()
-
     result = []
+
     for m in msgs:
         d = m.to_dict()
-        doc_url = None
-        if d.get("document"):
-            blob = bucket.blob(d["document"])
-            doc_url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
-
         result.append({
             "messageId": m.id,
             "senderId": d.get("senderId"),
             "message": d.get("message"),
-            "document": doc_url,
+            "document": d.get("document"),  # public URL
             "timestamp": d.get("timestamp")
         })
 
@@ -455,12 +416,11 @@ async def get_conversation_messages(request):
 async def root(request):
     return web.json_response({"message": "Server is running"})
 
-
 # ------------------------------
 # APP SETUP
 # ------------------------------
 
-app = web.Application(client_max_size=10*1024*1024) # Max size of 10mb per request (relevant for file uploading)
+app = web.Application(client_max_size=10*1024*1024)
 
 # Auth
 app.router.add_post("/signup", signup)

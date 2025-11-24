@@ -4,6 +4,25 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import time
 import os
+import hashlib
+
+# ------------------------------
+# hash passwords using SHA256 algorithim
+# ------------------------------
+def _hash(pw):
+    salt = secrets.token_urlsafe(32) #generates 32B salt
+    pw_salted = pw + salt
+    pw_hashed = hashlib.sha256(pw_salted.encode())
+    return (pw_hashed.hexdigest(), salt)
+##END _hash
+
+# ------------------------------
+# hash and return a password
+# ------------------------------
+def _get_hash(pw, salt):
+    pw_salted = pw + salt
+    pw_hashed = hashlib.sha256(pw_salted.encode())
+    return pw_hashed
 
 # ------------------------------
 # FIREBASE INITIALIZATION
@@ -31,10 +50,13 @@ async def signup(request):
     if not all([email, password, name]):
         return web.json_response({"error": "Missing fields"}, status=400)
 
+    password_hash, salt = _hash(password)
+
     doc = db.collection("users").document()
     doc.set({
         "email": email,
-        "password": password,
+        "password": password_hash,
+        "hash salt": salt,
         "name": name,
         "friends": [],
         "incomingRequests": []
@@ -54,7 +76,9 @@ async def login(request):
     users = db.collection("users").where("email", "==", email).stream()
     for u in users:
         user = u.to_dict()
-        if user.get("password") == password:
+        salt = user.get("hash_salt")
+        password_hashed = _get_hash(password, salt)
+        if user.get("password") == password_hashed:
             return web.json_response({"message": "Login successful"})
 
     return web.json_response({"error": "Invalid credentials"}, status=401)

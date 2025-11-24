@@ -5,27 +5,39 @@ from firebase_admin import credentials, firestore
 import time
 import os
 import hashlib
+import base64
+import secrets
+import uuid
+import datetime
+from google.cloud import storage
+from google.oauth2 import service_account
 
 # ------------------------------
-# hash passwords using SHA256 algorithim
+# HELPER METHODS
 # ------------------------------
-def _hash(pw):
-    salt = secrets.token_urlsafe(32) #generates 32B salt
-    pw_salted = pw + salt
-    pw_hashed = hashlib.sha256(pw_salted.encode())
-    return (pw_hashed.hexdigest(), salt)
-##END _hash
 
-# ------------------------------
-# hash and return a password
-# ------------------------------
-def _get_hash(pw, salt):
+# HASHING HELPERS
+def _hash(pw: str):
+    salt = secrets.token_urlsafe(32)  # generates 32B salt
     pw_salted = pw + salt
-    pw_hashed = hashlib.sha256(pw_salted.encode())
+    pw_hashed = hashlib.sha256(pw_salted.encode()).hexdigest()  # store as string
+    return pw_hashed, salt
+
+def _get_hash(pw: str, salt: str):
+    if salt is None:
+        raise ValueError("Salt is missing for this user")
+    pw_salted = pw + salt
+    pw_hashed = hashlib.sha256(pw_salted.encode()).hexdigest()  # return string
     return pw_hashed
 
+# GENERATE A SIGNED URL FOR TO VIEW A FILE (send to the frontend)
+def generate_signed_url(filename, expiration_minutes=15):
+    blob = bucket.blob(f"messages/{filename}")
+    url = blob.generate_signed_url(expiration=timedelta(minutes=expiration_minutes))
+    return url
+
 # ------------------------------
-# FIREBASE INITIALIZATION
+# FIRESTORE DATABASE INITIALIZATION
 # ------------------------------
 
 if os.path.exists("serviceAccountKey.json"):
@@ -35,6 +47,20 @@ else:
     firebase_admin.initialize_app()
 
 db = firestore.client()
+
+
+# ------------------------------
+# FIREBASE STORAGE INITIALIZATION
+# ------------------------------
+if os.path.exists("serviceAccountKey.json"):
+    storage_credentials = service_account.Credentials.from_service_account_file(
+        "serviceAccountKey.json"
+    )
+    storage_client = storage.Client(credentials=storage_credentials)
+else:
+    storage_client = storage.Client()
+
+bucket = storage_client.bucket("chatbase-b273c.firebasestorage.app")
 
 
 # ------------------------------
@@ -56,7 +82,7 @@ async def signup(request):
     doc.set({
         "email": email,
         "password": password_hash,
-        "hash salt": salt,
+        "hash_salt": salt,  # fixed key name
         "name": name,
         "friends": [],
         "incomingRequests": []
@@ -76,13 +102,15 @@ async def login(request):
     users = db.collection("users").where("email", "==", email).stream()
     for u in users:
         user = u.to_dict()
-        salt = user.get("hash_salt")
+        salt = user.get("hash_salt")  # fixed key name
+        if salt is None:
+            continue  # skip user if salt missing
+
         password_hashed = _get_hash(password, salt)
         if user.get("password") == password_hashed:
             return web.json_response({"message": "Login successful"})
 
     return web.json_response({"error": "Invalid credentials"}, status=401)
-
 
 # ------------------------------
 # USER ROUTES
@@ -317,7 +345,7 @@ async def send_message(request):
     roomId = data.get("roomId")
     conversationId = data.get("conversationId")
     message_text = data.get("message")
-    message_document = data.get("document")
+    message_document = data.get("document")  # {filename, data}
 
     if not senderId or not message_text:
         return web.json_response({"error": "Missing fields"}, status=400)
@@ -325,31 +353,47 @@ async def send_message(request):
     if not roomId and not conversationId:
         return web.json_response({"error": "Missing fields"}, status=400)
 
-    if roomId:
-        if not db.collection("rooms").document(roomId).get().exists:
-            return web.json_response({"error": "Room not found"}, status=404)
+    # Validate room or conversation
+    if roomId and not db.collection("rooms").document(roomId).get().exists:
+        return web.json_response({"error": "Room not found"}, status=404)
 
-    if conversationId:
-        if not db.collection("conversations").document(conversationId).get().exists:
-            return web.json_response({"error": "Conversation not found"}, status=404)
+    if conversationId and not db.collection("conversations").document(conversationId).get().exists:
+        return web.json_response({"error": "Conversation not found"}, status=404)
 
+    document_path = None
 
+    # ---------- UPLOAD DOCUMENT IF PROVIDED ----------
     if message_document:
-        if not message_document.endswith("pdf"):
-            return web.json_response({"error": "document is not a pdf"}, status=400)
+        filename = message_document.get("filename")
+        data_b64 = message_document.get("data")
+
+        if not filename.endswith(".pdf"):
+            return web.json_response({"error": "Document is not a pdf"}, status=400)
+
+        file_bytes = base64.b64decode(data_b64)
+
+        blob_name = f"messages/{uuid.uuid4()}-{filename}"
+        blob = bucket.blob(blob_name)
+
+        blob.upload_from_string(
+            file_bytes,
+            content_type="application/pdf"
+        )
+
+        document_path = blob_name  # store path, not URL
+
+    # ---------- SAVE MESSAGE METADATA ----------
     doc = db.collection("messages").document()
     doc.set({
         "senderId": senderId,
         "roomId": roomId,
         "conversationId": conversationId,
         "message": message_text,
-        "document": message_document,
+        "document": document_path,  # store path
         "timestamp": int(time.time())
     })
 
-
     return web.json_response({"message": "Message sent", "messageId": doc.id})
-
 
 async def get_room_messages(request):
     roomId = request.match_info["roomId"]
@@ -362,11 +406,16 @@ async def get_room_messages(request):
     result = []
     for m in msgs:
         d = m.to_dict()
+        doc_url = None
+        if d.get("document"):
+            blob = bucket.blob(d["document"])
+            doc_url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
+
         result.append({
             "messageId": m.id,
             "senderId": d.get("senderId"),
             "message": d.get("message"),
-            "document": d.get("document")
+            "document": doc_url,
             "timestamp": d.get("timestamp")
         })
 
@@ -384,16 +433,20 @@ async def get_conversation_messages(request):
     result = []
     for m in msgs:
         d = m.to_dict()
+        doc_url = None
+        if d.get("document"):
+            blob = bucket.blob(d["document"])
+            doc_url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
+
         result.append({
             "messageId": m.id,
             "senderId": d.get("senderId"),
             "message": d.get("message"),
-            "document": d.get("document")
+            "document": doc_url,
             "timestamp": d.get("timestamp")
         })
 
     return web.json_response(result)
-
 
 # ------------------------------
 # ROOT
@@ -407,7 +460,7 @@ async def root(request):
 # APP SETUP
 # ------------------------------
 
-app = web.Application()
+app = web.Application(client_max_size=10*1024*1024) # Max size of 10mb per request (relevant for file uploading)
 
 # Auth
 app.router.add_post("/signup", signup)

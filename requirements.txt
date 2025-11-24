@@ -1,3 +1,5 @@
 aiohttp
 aiohttp_cors
 firebase-admin
+google-cloud-storage
+google-auth

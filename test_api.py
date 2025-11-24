@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import base64  # added for PDF encoding
 
 BASE = "https://chatapp-1027679917959.us-central1.run.app"
 
@@ -153,6 +154,25 @@ pretty("Send Message to Conversation", requests.post(f"{BASE}/messages", json={
     "roomId": None,
     "conversationId": conv_id,
     "message": "Hey Alice, this is Bob!"
+}))
+
+# -------------------------
+# SEND MESSAGE WITH DOCUMENT
+# -------------------------
+# Requires 'test.pdf' file in the same folder
+with open("test.pdf", "rb") as f:
+    pdf_bytes = f.read()
+pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+
+pretty("Send Message with PDF Document", requests.post(f"{BASE}/messages", json={
+    "senderId": alice_id,
+    "roomId": room1,
+    "conversationId": None,
+    "message": "Here is a PDF document",
+    "document": {
+        "filename": "test.pdf",
+        "data": pdf_b64
+    }
 }))
 
 

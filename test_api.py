@@ -54,6 +54,33 @@ pretty("Get Users", requests.get(f"{BASE}/users"))
 
 
 # -------------------------
+# FRIEND SYSTEM TESTS
+# -------------------------
+
+# SEND FRIEND REQUEST
+pretty("Alice sends friend request to Bob", 
+       requests.post(f"{BASE}/friends/request", json={
+           "fromUser": alice_id,
+           "toUser": bob_id
+       }))
+
+# GET INCOMING REQUESTS FOR BOB
+pretty("Bob views incoming friend requests", 
+       requests.get(f"{BASE}/friends/{bob_id}/incoming"))
+
+# ACCEPT REQUEST (Bob accepts Alice)
+pretty("Bob accepts Alice's friend request",
+       requests.post(f"{BASE}/friends/accept", json={
+           "userId": bob_id,
+           "fromUser": alice_id
+       }))
+
+# GET FINAL FRIEND LISTS
+pretty("Alice's friends", requests.get(f"{BASE}/friends/{alice_id}"))
+pretty("Bob's friends", requests.get(f"{BASE}/friends/{bob_id}"))
+
+
+# -------------------------
 # CREATE ROOMS
 # -------------------------
 r3 = requests.post(f"{BASE}/rooms", json={

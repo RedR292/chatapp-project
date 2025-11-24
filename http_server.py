@@ -35,7 +35,9 @@ async def signup(request):
     doc.set({
         "email": email,
         "password": password,
-        "name": name
+        "name": name,
+        "friends": [],
+        "incomingRequests": []
     })
 
     return web.json_response({"message": "User created", "id": doc.id})
@@ -75,6 +77,99 @@ async def get_users(request):
         })
 
     return web.json_response(result)
+
+
+# ------------------------------
+# FRIEND SYSTEM ROUTES
+# ------------------------------
+
+async def send_friend_request(request):
+    data = await request.json()
+    fromUser = data.get("fromUser")
+    toUser = data.get("toUser")
+
+    if not all([fromUser, toUser]):
+        return web.json_response({"error": "Missing fields"}, status=400)
+
+    if fromUser == toUser:
+        return web.json_response({"error": "Cannot friend yourself"}, status=400)
+
+    from_ref = db.collection("users").document(fromUser).get()
+    to_ref = db.collection("users").document(toUser).get()
+
+    if not from_ref.exists or not to_ref.exists:
+        return web.json_response({"error": "User not found"}, status=404)
+
+    to_data = to_ref.to_dict()
+
+    # Already friends
+    if fromUser in to_data.get("friends", []):
+        return web.json_response({"error": "Already friends"}, status=400)
+
+    # Already requested
+    if fromUser in to_data.get("incomingRequests", []):
+        return web.json_response({"error": "Request already sent"}, status=400)
+
+    db.collection("users").document(toUser).update({
+        "incomingRequests": firestore.ArrayUnion([fromUser])
+    })
+
+    return web.json_response({"message": "Friend request sent"})
+
+
+async def accept_friend_request(request):
+    data = await request.json()
+    userId = data.get("userId")
+    fromUser = data.get("fromUser")
+
+    if not all([userId, fromUser]):
+        return web.json_response({"error": "Missing fields"}, status=400)
+
+    user_doc = db.collection("users").document(userId).get()
+    from_doc = db.collection("users").document(fromUser).get()
+
+    if not user_doc.exists or not from_doc.exists:
+        return web.json_response({"error": "User not found"}, status=404)
+
+    user_data = user_doc.to_dict()
+
+    # Must be in incoming requests
+    if fromUser not in user_data.get("incomingRequests", []):
+        return web.json_response({"error": "No friend request found"}, status=400)
+
+    # Add each other as friends
+    db.collection("users").document(userId).update({
+        "incomingRequests": firestore.ArrayRemove([fromUser]),
+        "friends": firestore.ArrayUnion([fromUser])
+    })
+
+    db.collection("users").document(fromUser).update({
+        "friends": firestore.ArrayUnion([userId])
+    })
+
+    return web.json_response({"message": "Friend request accepted"})
+
+
+async def get_friends(request):
+    userId = request.match_info["userId"]
+    doc = db.collection("users").document(userId).get()
+
+    if not doc.exists:
+        return web.json_response({"error": "User not found"}, status=404)
+
+    data = doc.to_dict()
+    return web.json_response({"friends": data.get("friends", [])})
+
+
+async def get_incoming_requests(request):
+    userId = request.match_info["userId"]
+    doc = db.collection("users").document(userId).get()
+
+    if not doc.exists:
+        return web.json_response({"error": "User not found"}, status=404)
+
+    data = doc.to_dict()
+    return web.json_response({"incomingRequests": data.get("incomingRequests", [])})
 
 
 # ------------------------------
@@ -205,7 +300,6 @@ async def send_message(request):
     if not roomId and not conversationId:
         return web.json_response({"error": "Missing fields"}, status=400)
 
-    # Check existence
     if roomId:
         if not db.collection("rooms").document(roomId).get().exists:
             return web.json_response({"error": "Room not found"}, status=404)
@@ -288,6 +382,12 @@ app.router.add_post("/login", login)
 
 # Users
 app.router.add_get("/users", get_users)
+
+# Friends
+app.router.add_post("/friends/request", send_friend_request)
+app.router.add_post("/friends/accept", accept_friend_request)
+app.router.add_get("/friends/{userId}", get_friends)
+app.router.add_get("/friends/{userId}/incoming", get_incoming_requests)
 
 # Rooms
 app.router.add_post("/rooms", create_room)

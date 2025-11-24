@@ -293,6 +293,7 @@ async def send_message(request):
     roomId = data.get("roomId")
     conversationId = data.get("conversationId")
     message_text = data.get("message")
+    message_document = data.get("document")
 
     if not senderId or not message_text:
         return web.json_response({"error": "Missing fields"}, status=400)
@@ -308,14 +309,20 @@ async def send_message(request):
         if not db.collection("conversations").document(conversationId).get().exists:
             return web.json_response({"error": "Conversation not found"}, status=404)
 
+
+    if message_document:
+        if not message_document.endswith("pdf"):
+            return web.json_response({"error": "document is not a pdf"}, status=400)
     doc = db.collection("messages").document()
     doc.set({
         "senderId": senderId,
         "roomId": roomId,
         "conversationId": conversationId,
         "message": message_text,
+        "document": message_document,
         "timestamp": int(time.time())
     })
+
 
     return web.json_response({"message": "Message sent", "messageId": doc.id})
 
@@ -335,6 +342,7 @@ async def get_room_messages(request):
             "messageId": m.id,
             "senderId": d.get("senderId"),
             "message": d.get("message"),
+            "document": d.get("document")
             "timestamp": d.get("timestamp")
         })
 
@@ -356,6 +364,7 @@ async def get_conversation_messages(request):
             "messageId": m.id,
             "senderId": d.get("senderId"),
             "message": d.get("message"),
+            "document": d.get("document")
             "timestamp": d.get("timestamp")
         })
 

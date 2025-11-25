@@ -341,23 +341,30 @@ async def send_message(request):
         filename = message_document.get("filename")
         data_b64 = message_document.get("data")
 
-        # Determine content type from extension
-        ext = filename.lower().split(".")[-1]
+        # Decode file
+        try:
+            file_bytes = base64.b64decode(data_b64)
+        except Exception:
+            return web.json_response({"error": "Invalid base64 data"}, status=400)
 
-        allowed_types = {
-            "pdf": "application/pdf",
+        # Try to detect mime type by extension, fallback to octet-stream
+        ext = filename.split(".")[-1].lower() if "." in filename else ""
+        guess_types = {
             "png": "image/png",
             "jpg": "image/jpeg",
-            "jpeg": "image/jpeg"
+            "jpeg": "image/jpeg",
+            "pdf": "application/pdf",
+            "txt": "text/plain",
+            "json": "application/json",
+            "gif": "image/gif",
+            "mp3": "audio/mpeg",
+            "mp4": "video/mp4",
+            "wav": "audio/wav"
         }
 
-        if ext not in allowed_types:
-            return web.json_response({"error": "Unsupported file type"}, status=400)
+        content_type = guess_types.get(ext, "application/octet-stream")
 
-        content_type = allowed_types[ext]
-
-        # Upload the file
-        file_bytes = base64.b64decode(data_b64)
+        # Upload file to Firebase Storage
         blob_name = f"messages/{uuid.uuid4()}-{filename}"
         blob = bucket.blob(blob_name)
 

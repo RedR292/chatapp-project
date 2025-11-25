@@ -482,6 +482,12 @@ cors = aiohttp_cors.setup(app, defaults={
         expose_headers="*",
         allow_headers="*",
         allow_methods=["GET", "POST", "OPTIONS"]
+    ),
+    "https://chat-app-frontend-six-tau.vercel.app": aiohttp_cors.ResourceOptions(
+        allow_credentials=True,
+        expose_headers="*",
+        allow_headers="*",
+        allow_methods=["GET", "POST", "OPTIONS"]
     )
 })
 

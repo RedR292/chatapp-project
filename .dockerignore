@@ -3,3 +3,7 @@ serviceAccountKey.json
 .gitignore
 __pycache__
 *.log
+*.pdf
+*.png
+*.jpg
+*.jpeg

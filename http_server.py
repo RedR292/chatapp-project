@@ -310,9 +310,9 @@ async def get_conversation(request):
         "participants": [d.get("userA"), d.get("userB")]
     })
 
-# ------------------------------
-# MESSAGE ROUTES (USING PUBLIC URLS)
-# ------------------------------
+# --------------
+# MESSAGE ROUTES
+# --------------
 
 async def send_message(request):
     data = await request.json()
@@ -341,20 +341,34 @@ async def send_message(request):
         filename = message_document.get("filename")
         data_b64 = message_document.get("data")
 
-        if not filename.endswith(".pdf"):
-            return web.json_response({"error": "Document is not a pdf"}, status=400)
+        # Determine content type from extension
+        ext = filename.lower().split(".")[-1]
 
+        allowed_types = {
+            "pdf": "application/pdf",
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg"
+        }
+
+        if ext not in allowed_types:
+            return web.json_response({"error": "Unsupported file type"}, status=400)
+
+        content_type = allowed_types[ext]
+
+        # Upload the file
         file_bytes = base64.b64decode(data_b64)
         blob_name = f"messages/{uuid.uuid4()}-{filename}"
         blob = bucket.blob(blob_name)
 
         blob.upload_from_string(
             file_bytes,
-            content_type="application/pdf"
+            content_type=content_type
         )
 
         document_url = blob.public_url
 
+    # Save message
     doc = db.collection("messages").document()
     doc.set({
         "senderId": senderId,

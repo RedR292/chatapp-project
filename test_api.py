@@ -159,7 +159,6 @@ pretty("Send Message to Conversation", requests.post(f"{BASE}/messages", json={
 # -------------------------
 # SEND MESSAGE WITH DOCUMENT
 # -------------------------
-# Requires 'test.pdf' file in the same folder
 with open("test.pdf", "rb") as f:
     pdf_bytes = f.read()
 pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
@@ -172,6 +171,24 @@ pretty("Send Message with PDF Document", requests.post(f"{BASE}/messages", json=
     "document": {
         "filename": "test.pdf",
         "data": pdf_b64
+    }
+}))
+
+# -------------------------
+# SEND MESSAGE WITH JPG IMAGE
+# -------------------------
+with open("test.jpg", "rb") as f:
+    img_bytes = f.read()
+img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+
+pretty("Send Message with JPG Image", requests.post(f"{BASE}/messages", json={
+    "senderId": alice_id,
+    "roomId": room1,
+    "conversationId": None,
+    "message": "Here is a JPG image",
+    "document": {
+        "filename": "test.jpg",
+        "data": img_b64
     }
 }))
 

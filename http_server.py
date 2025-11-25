@@ -441,7 +441,7 @@ async def root(request):
 # APP SETUP
 # ------------------------------
 
-app = web.Application(client_max_size=10*1024*1024)
+app = web.Application(client_max_size=50*1024*1024)
 
 # Auth
 app.router.add_post("/signup", signup)

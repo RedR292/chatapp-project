@@ -186,6 +186,53 @@ async def accept_friend_request(request):
 
     return web.json_response({"message": "Friend request accepted"})
 
+async def reject_friend_request(request):
+    data = await request.json()
+    userId = data.get("userId")
+    fromUser = data.get("fromUser")
+
+    if not all([userId, fromUser]):
+        return web.json_response({"error": "Missing fields"}, status=400)
+
+    doc = db.collection("users").document(userId).get()
+    if not doc.exists:
+        return web.json_response({"error": "User not found"}, status=404)
+
+    incoming = doc.to_dict().get("incomingRequests", [])
+    if fromUser not in incoming:
+        return web.json_response({"error": "No pending request from this user"}, status=400)
+
+    db.collection("users").document(userId).update({
+        "incomingRequests": firestore.ArrayRemove([fromUser])
+    })
+
+    return web.json_response({"message": "Friend request rejected"})
+
+async def delete_friend(request):
+    data = await request.json()
+    userA = data.get("userA")
+    userB = data.get("userB")
+
+    if not all([userA, userB]):
+        return web.json_response({"error": "Missing fields"}, status=400)
+
+    docA = db.collection("users").document(userA).get()
+    docB = db.collection("users").document(userB).get()
+
+    if not docA.exists or not docB.exists:
+        return web.json_response({"error": "User not found"}, status=404)
+
+    # Remove from both friend lists
+    db.collection("users").document(userA).update({
+        "friends": firestore.ArrayRemove([userB])
+    })
+
+    db.collection("users").document(userB).update({
+        "friends": firestore.ArrayRemove([userA])
+    })
+
+    return web.json_response({"message": "Friend removed"})
+
 async def get_friends(request):
     userId = request.match_info["userId"]
     doc = db.collection("users").document(userId).get()
@@ -274,7 +321,16 @@ async def delete_room(request):
     if not doc.exists:
         return web.json_response({"error": "Room not found"}, status=404)
 
+    # Delete messages in the room
+    msgs = db.collection("messages").where("roomId", "==", roomId).stream()
+    batch = db.batch()
+    for m in msgs:
+        batch.delete(db.collection("messages").document(m.id))
+    batch.commit()
+
+    # Delete the room itself
     db.collection("rooms").document(roomId).delete()
+
     return web.json_response({"message": "Room deleted"})
 
 # ------------------------------
@@ -289,10 +345,27 @@ async def create_conversation(request):
     if not all([userA, userB]):
         return web.json_response({"error": "Missing fields"}, status=400)
 
-    doc = db.collection("conversations").document()
+    # Ensure consistent ordering
+    users_sorted = sorted([userA, userB])
+    user1, user2 = users_sorted
+
+    # Check if a conversation already exists
+    conversations_ref = db.collection("conversations")
+    query = conversations_ref.where("userA", "==", user1).where("userB", "==", user2).limit(1)
+    existing = query.get()
+    if existing:
+        # Return existing conversation
+        conversation = existing[0]
+        return web.json_response({
+            "message": "Conversation already exists",
+            "conversationId": conversation.id
+        })
+
+    # Create new conversation
+    doc = conversations_ref.document()
     doc.set({
-        "userA": userA,
-        "userB": userB
+        "userA": user1,
+        "userB": user2
     })
 
     return web.json_response({"message": "Conversation created", "conversationId": doc.id})
@@ -396,6 +469,17 @@ async def send_message(request):
 
     return web.json_response({"message": "Message sent", "messageId": doc.id})
 
+async def delete_message(request):
+    messageId = request.match_info["messageId"]
+    doc = db.collection("messages").document(messageId).get()
+
+    if not doc.exists:
+        return web.json_response({"error": "Message not found"}, status=404)
+
+    db.collection("messages").document(messageId).delete()
+    return web.json_response({"message": "Message deleted"})
+
+
 async def get_room_messages(request):
     roomId = request.match_info["roomId"]
 
@@ -461,6 +545,8 @@ app.router.add_get("/users", get_users)
 # Friends
 app.router.add_post("/friends/request", send_friend_request)
 app.router.add_post("/friends/accept", accept_friend_request)
+app.router.add_post("/friends/reject", reject_friend_request)
+app.router.add_post("/friends/delete", delete_friend)
 app.router.add_get("/friends/{userId}", get_friends)
 app.router.add_get("/friends/{userId}/incoming", get_incoming_requests)
 
@@ -477,6 +563,7 @@ app.router.add_get("/conversations/{conversationId}", get_conversation)
 
 # Messages
 app.router.add_post("/messages", send_message)
+app.router.add_post("/messages/{messageId}/delete", delete_message)
 app.router.add_get("/rooms/{roomId}/messages", get_room_messages)
 app.router.add_get("/conversations/{conversationId}/messages", get_conversation_messages)
 

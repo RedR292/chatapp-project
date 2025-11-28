@@ -438,9 +438,9 @@ async def send_message(request):
         content_type = guess_types.get(ext, "application/octet-stream")
 
 
-        vision_client = vision.ImageAnnotatorClient()
-        vision_img = vision.Image(content=file_bytes)
-        response = client.safe_search_detection(image=image)
+        # vision_client = vision.ImageAnnotatorClient()
+        # vision_img = vision.Image(content=file_bytes)
+        # response = client.safe_search_detection(image=image)
         ##TODO: Learn what response.safe_search_annotation responds with
         # return web.json_response(response.safe_search_annotation)
 
